@@ -8,15 +8,21 @@ from pydantic import BaseModel, Field, EmailStr
 
 # Models
 
-class User(BaseModel):
+class UserBase(BaseModel):
     user_id: UUID = Field(...)
     email: EmailStr = Field(...)
+
+
+class UserLogin(UserBase):
     password: str = Field(
         ...,
         min_length = 8,
-        max_length = 64,
-        example = 'example@example.com'
+        max_length = 40,
+        example = '123456789'
     )
+
+
+class User(UserBase):
     first_name: str = Field(
         ...,
     min_length = 1,
@@ -32,18 +38,7 @@ class User(BaseModel):
     birth_date: Optional[date] = Field(default= None)
 
 
-class UserLogin(User):
-    password: str = Field(
-        ...,
-        min_length = 8,
-        max_length = 40,
-    )
-
-
 class UserRegister(User, UserLogin):
-    pass
-
-class UserOut(User):
     pass
 
 

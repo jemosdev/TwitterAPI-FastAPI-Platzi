@@ -1,0 +1,51 @@
+[
+    {
+        "user_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "email": "user@example.com",
+        "password": "123456789",
+        "first_name": "john",
+        "last_name": "Doe",
+        "birth_date": "2022-03-13"
+    },
+    {
+        "user_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "email": "user@example.com",
+        "password": "123456789",
+        "first_name": "john",
+        "last_name": "Doe",
+        "birth_date": "2022-03-13"
+    },
+    {
+        "user_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "email": "facundashon@gmail.com",
+        "password": "holasoyfacundashon",
+        "first_name": "facundashon",
+        "last_name": "garciashon",
+        "birth_date": "2022-01-02"
+    }
+][
+    {
+        "user_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "email": "user@example.com",
+        "password": "123456789",
+        "first_name": "john",
+        "last_name": "Doe",
+        "birth_date": "2022-03-13"
+    },
+    {
+        "user_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "email": "user@example.com",
+        "password": "123456789",
+        "first_name": "john",
+        "last_name": "Doe",
+        "birth_date": "2022-03-13"
+    },
+    {
+        "user_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "email": "facundashon@gmail.com",
+        "password": "holasoyfacundashon",
+        "first_name": "facundashon",
+        "last_name": "garciashon",
+        "birth_date": "2022-01-02"
+    }
+]

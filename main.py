@@ -14,13 +14,6 @@ app = FastAPI()
 
 # Path operations 
 
-@app.get(
-    path= '/',
-    tags= ['Home']
-    )
-def home():
-    return {'Twitter API': 'Working!!'}
-
 ## Users
 
 ### Register an user
@@ -145,7 +138,22 @@ def update_an_user():
     tags= ['Tweets']
     )
 def home_tweets():
-    return {'Twitter API Home': 'Working Good!!'}
+    """
+    Users \n
+    This path operation shows all tweets in the app \n
+    Parameters:
+    - \n
+    Returns a json list with all tweets in the app, with the following keys
+    - tweet_id: UUID
+    - content: str
+    - created_at: datetime
+    - updated_at: Optional[datetime]
+    - by: User 
+    """
+    with open('tweets.json', 'r', encoding = 'utf-8') as f:
+        content = json.loads(f.read())
+        return content
+
 
 ###post a tweet
 @app.post(
@@ -167,7 +175,7 @@ def post(tweet: Tweet = Body(...)):
     - content: str
     - created_at: datetime
     - updated_at: Optional[datetime]
-    by: UserLogin 
+    - by: User 
     """
     with open('tweets.json','r+', encoding= 'utf-8') as f:
         contents = json.loads(f.read())

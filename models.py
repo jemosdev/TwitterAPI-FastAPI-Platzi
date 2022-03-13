@@ -41,6 +41,9 @@ class User(UserBase):
 class UserRegister(User, UserLogin):
     pass
 
+class LoginOut(BaseModel): 
+    email: EmailStr = Field(...)
+    message: str = Field(default="Login Successfully!")
 
 class Tweet(BaseModel):
     tweet_id: UUID = Field(...)

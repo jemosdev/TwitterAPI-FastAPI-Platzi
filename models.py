@@ -40,6 +40,9 @@ class UserLogin(User):
     )
 
 
+class UserRegister(User, UserLogin):
+    pass
+
 class UserOut(User):
     pass
 

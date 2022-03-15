@@ -25,15 +25,15 @@ class UserLogin(UserBase):
 class User(UserBase):
     first_name: str = Field(
         ...,
-    min_length = 1,
-    max_length = 50,
-    example = 'john'
+        min_length = 1,
+        max_length = 50,
+        example = 'john'
     )
     last_name: str = Field(
         ...,
-    min_length = 1,
-    max_length = 50,
-    example = 'Doe'
+        min_length = 1,
+        max_length = 50,
+        example = 'Doe'
     )
     birth_date: Optional[date] = Field(default= None)
 

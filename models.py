@@ -8,11 +8,12 @@ from pydantic import BaseModel, Field, EmailStr
 
 # Models
 
+# pendiente añadir default_factory para generar uuid
 class UserBase(BaseModel):
     user_id: UUID = Field(...)
     email: EmailStr = Field(...)
 
-
+#pendiente de borrar
 class UserLogin(UserBase):
     password: str = Field(
         ...,
@@ -41,9 +42,11 @@ class User(UserBase):
 class UserRegister(User, UserLogin):
     pass
 
-class LoginOut(BaseModel): 
-    email: EmailStr = Field(...)
-    message: str = Field(default="Login Successfully!")
+
+class UserLoginOut(BaseModel): 
+    email: EmailStr = Field(..., example = 'userexample@example.com')
+    message: str = Field(..., example = '123456789')
+
 
 class Tweet(BaseModel):
     tweet_id: UUID = Field(...)

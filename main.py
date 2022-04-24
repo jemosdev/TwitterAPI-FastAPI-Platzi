@@ -1,13 +1,14 @@
 # Python 
-# Pydantic
 # FastAPI
 import json
+from uuid import UUID
 from typing import List
-from fastapi import Body, FastAPI
-from fastapi import status
+from fastapi import FastAPI, Body, status
+from fastapi import Form, HTTPException
+from pydantic.networks import EmailStr
 
 # Models
-from models import User, UserLogin, UserRegister
+from models import User, UserRegister, UserLoginOut 
 from models import Tweet
 
 app = FastAPI()
@@ -15,6 +16,7 @@ app = FastAPI()
 # Path operations 
 
 ## Users
+
 
 ### Register an user
 @app.post(
@@ -29,7 +31,7 @@ def signup(user: UserRegister= Body(...)):
     Signup \n
     This path operation register an user in the app \n
     Parameters:
-    - Request body parameter
+    - Request body parameters:
     - User: UserRegister \n
     Return a json with a basic user information:
     - UserID: UUID (Universal Unique Identifier)
@@ -39,37 +41,49 @@ def signup(user: UserRegister= Body(...)):
     - birth_date: datetime
     """
     with open('users.json','r+', encoding= 'utf-8') as f:
-        contents = json.loads(f.read())
-        user_dict = user.dict()
+        contents = json.loads(f.read())         #carga string transforma a json
+        user_dict = user.dict()                 #convertir body en diccionario
         user_dict['user_id'] = str(user_dict['user_id'])
         user_dict['birth_date'] = str(user_dict['birth_date'])
         contents.append(user_dict)
-        f.seek(0)
-        f.write(json.dumps(contents))
-        return user
+        f.seek(0)                               #moverme al principio del archivo
+        f.write(json.dumps(contents))           #transf un dict y escribo como un json 
+        return user                             
 
-#Los pasos son los siguentes:
-        # 1- Leemos el json con .read() y lo convertimos en un tipo de dato que podemos trabajar con json.loads
-        # 2- Crea un diccionario a partir del request Body (user)
-        # 3- Casting de variables que no se pueden manejar a str
-        # 4- Y se hace un append del dict
-        # 5- Hay que moverse al principio del archivo porque ya se estuvo trabajando abierto, esto para evitar bugs, con ".seek(0)", nos lleva al primer byte
-        # 6- Hay que hacer el write pero en json, se realiza con "json.dumps()"
-        # 7- El return de user, el que viene como parámetro, para decirle al user del API que se escribio correctamente
-
-
+# solo lee un usuario
 ### Login an user
 @app.post(
     path = '/login',
-    response_model = User,
+    response_model = UserLoginOut,
     status_code = status.HTTP_200_OK,
     summary = 'Login a user',
     tags= ['Users']
 )
-def login():
-    pass
+def login(email: EmailStr = Form(...), password: str = Form(...)):
+    """
+    Login \n
+    This path operation login an user in the app \n
+    Parameters:
+    - Request body parameters:
+        - email: EmailStr
+        - password: str 
+    Return a json with a basic user information:
+    - UserID: UUID (Universal Unique Identifier)
+    - email: EmailStr
+    - first_name: str
+    - last_name: str
+    - birth_date: datetime
+    """
+    with open("users.json", "r", encoding="utf-8") as f: 
+        contents = list(json.loads(f.read()))
+        for user in contents:
+            if email == user["email"] and password == user["password"]:
+                return UserLoginOut(email=email, message="Logged user!")
+            else:
+                return UserLoginOut(email=email, message= "Login not successful")
 
-### show all users
+
+### Show all users
 @app.get(
     path = '/users',
     response_model = List[User],
@@ -83,7 +97,7 @@ def show_all_users():
     This path operation shows all users in the app \n
     Parameters:
     - \n
-    Returns a json list with all users in the app, with the following keys
+    Returns a json list with all users in the app, with the following keys:
     - user_id: UUID 
     - email: EmailStr
     - first_name: str
@@ -94,7 +108,8 @@ def show_all_users():
         content = json.loads(f.read())
         return content
 
-### show an user
+# solo lee un usuario
+### Show an user
 @app.get(
     path = '/users/{user_id}',
     response_model = User,
@@ -102,9 +117,33 @@ def show_all_users():
     summary = 'Show a specific user',
     tags= ['Users']
 )
-def show_an_user():
-    pass
+def show_an_user(user_id: UUID = (...)):
+    """
+    One User \n
+    This path operation shows one user in the app if he or she exists\n
+    Parameters:
+    - User_id: UUID
+    Returns a json with one user in the app, with the following keys:
+    - user_id: UUID 
+    - email: EmailStr
+    - first_name: str
+    - last_name: str
+    - birth_date: datetime
+    """
+    with open('users.json', 'r', encoding = 'utf-8') as f:
+        contents = json.loads(f.read())
+        id= str(user_id)
+        for user in contents:
+            if user["user_id"] == id:
+                return user
+            else:
+                raise HTTPException(
+            status_code= status.HTTP_404_NOT_FOUND,
+            detail= f'The user_id does not exist'
+        )
 
+
+# solo lee un usuario
 ### Delete an user
 @app.delete(
     path = '/users/{user_id}/delete',
@@ -113,10 +152,37 @@ def show_an_user():
     summary = 'Delete an user',
     tags= ['Users']
 )
-def Delete_an_user():
-    pass
+def Delete_an_user(user_id: UUID = (...)):
+    """
+    Delete an User \n
+    This path operation delete one user in the app if he or she exists\n
+    Parameters:
+    - User_id: UUID
+    Returns a json with deleted user data:
+    - user_id: UUID 
+    - email: EmailStr
+    - first_name: str
+    - last_name: str
+    - birth_date: datetime
+    """
+    with open("users.json", "r+", encoding= "utf-8") as f: 
+        contents = json.loads(f.read())
+        id = str(user_id)
+        for user in contents:
+            if user["user_id"] == id:
+                contents.remove(user)
+                with open("users.json", "w", encoding="utf-8") as f:
+                    f.seek(0)
+                    f.write(json.dumps(contents))
+                    return user
+            else:
+                raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail= f'The user_id does not exist'
+        )
 
-### update an user
+
+### Update an user
 @app.put(
     path = '/user/{user_id}/update',
     response_model = User,
@@ -124,12 +190,46 @@ def Delete_an_user():
     summary = 'Update an user',
     tags= ['Users']
 )
-def update_an_user():
-    pass
+def update_an_user(user_id: UUID = (...), user: UserRegister= Body(...)):
+    """
+    Update an User \n
+    This path operation update one user in the app if he or she exists\n
+    Parameters:
+    - User_id: UUID
+    - Request body parameters:
+        -User: UserRegister \n
+    Returns a user model with the following data:
+    - user_id: UUID 
+    - email: EmailStr
+    - first_name: str
+    - last_name: str
+    - birth_date: datetime
+    """
+    user_id= str(user_id)
+    user_dict= user.dict()
+    user_dict["user_id"] = str(user_dict["user_id"])
+    user_dict["birth_date"] = str(user_dict["birth_date"])
+    
+    with open("users.json", "r+", encoding="utf-8") as f: 
+        contents = json.loads(f.read())
+    for user in contents:
+        if user["user_id"] == user_id:
+            contents[contents.index(user)] = user_dict
+            with open("users.json", "w", encoding="utf-8") as f:
+                f.seek(0)
+                f.write(json.dumps(contents))
+            return user
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail= f'The user_id does not exist'
+        )
+
 
 ## Tweets
 
-###show all tweets
+
+###Show all tweets
 @app.get(
     path= '/',
     response_model= List[Tweet],
@@ -155,7 +255,7 @@ def home_tweets():
         return content
 
 
-###post a tweet
+###Post a tweet
 @app.post(
     path= '/post',
     response_model= Tweet,
@@ -182,7 +282,8 @@ def post(tweet: Tweet = Body(...)):
         tweet_dict = tweet.dict()
         tweet_dict['tweet_id'] = str(tweet_dict['tweet_id'])
         tweet_dict['created_at'] = str(tweet_dict['created_at'])
-        tweet_dict['updated_at'] = str(tweet_dict['updated_at'])
+        tweet_dict['updated_at']= str(tweet_dict['updated_at'])
+        #casting UUID 
         tweet_dict['by']['user_id'] = str(tweet_dict['by']['user_id'])
         tweet_dict['by']['birth_date'] = str(tweet_dict['by']['birth_date'])
         contents.append(tweet_dict)
@@ -190,7 +291,11 @@ def post(tweet: Tweet = Body(...)):
         f.write(json.dumps(contents))
         return tweet
 
-###show a tweet
+
+
+
+
+###Show a tweet
 @app.get(
     path= '/tweets/{tweet_id}',
     response_model= Tweet,
@@ -252,9 +357,6 @@ if any(users['email'] == user.email for users in results):
             raise ValueError('Must be over 18!')
         else:
             return v
-
-
-
 En mi caso usé el validator decorator de Pydantic, al cual como puedes ver le paso como parametro el nombre del campo que quiero validar, lo uso para decorar una funcion de dos parametros (el primero es la clase misma NO una instancia, no la usaré pero la tengo que poner porque el validator es un classmethod y lo requiere), el segundo de ellos es el objeto a validar (pydantic al parecer tiene como convencion nombrarlo v). Implementas la logica del validador en esa funcion, la cual debe:
 
 Elevar una exeption para cuando no es un dato correcto.

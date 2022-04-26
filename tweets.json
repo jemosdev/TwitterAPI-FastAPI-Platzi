@@ -1,0 +1,1 @@
+[{"tweet_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6", "content": "Hello World with FastAPI", "created_at": "2022-04-26 10:59:52.374180", "updated_at": "2022-04-26 11:01:55.223250", "by": {"user_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6", "email": "user@example.com", "first_name": "john", "last_name": "Doe", "birth_date": "2022-04-26"}}]

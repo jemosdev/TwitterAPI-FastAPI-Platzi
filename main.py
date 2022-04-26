@@ -392,8 +392,8 @@ def update_a_tweet(
         contents = json.loads(f.read())
         for tweet in contents:
             if tweet["tweet_id"] == tweet_id:
-                tweet["tweet_id"] = content
-                tweet["updated_at"] = (datetime.now())
+                tweet["content"] = content
+                tweet["updated_at"] = str(datetime.now())
                 with open("tweets.json", "w", encoding="utf-8") as f:
                     f.seek(0)
                     f.write(json.dumps(contents))

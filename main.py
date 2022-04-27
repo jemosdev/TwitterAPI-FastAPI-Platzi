@@ -1,25 +1,20 @@
 # Python 
-# Pydantic
 # FastAPI
 import json
+from uuid import UUID
+from datetime import datetime
 from typing import List
-from fastapi import Body, FastAPI
-from fastapi import status
+from fastapi import FastAPI, Body, status
+from fastapi import Form, HTTPException, Path
+from pydantic.networks import EmailStr
 
 # Models
-from models import User, UserLogin, UserRegister
+from models import User, UserRegister, UserLoginOut 
 from models import Tweet
 
 app = FastAPI()
 
 # Path operations 
-
-@app.get(
-    path= '/',
-    tags= ['Home']
-    )
-def home():
-    return {'Twitter API': 'Working!!'}
 
 ## Users
 
@@ -36,7 +31,7 @@ def signup(user: UserRegister= Body(...)):
     Signup \n
     This path operation register an user in the app \n
     Parameters:
-    - Request body parameter
+    - Request body parameters:
     - User: UserRegister \n
     Return a json with a basic user information:
     - UserID: UUID (Universal Unique Identifier)
@@ -46,37 +41,52 @@ def signup(user: UserRegister= Body(...)):
     - birth_date: datetime
     """
     with open('users.json','r+', encoding= 'utf-8') as f:
-        contents = json.loads(f.read())
-        user_dict = user.dict()
+        contents = json.loads(f.read())         #load the string an transform to json
+        user_dict = user.dict()                 #convert body in dictionary
         user_dict['user_id'] = str(user_dict['user_id'])
         user_dict['birth_date'] = str(user_dict['birth_date'])
-        contents.append(user_dict)
-        f.seek(0)
-        f.write(json.dumps(contents))
-        return user
-
-#Los pasos son los siguentes:
-        # 1- Leemos el json con .read() y lo convertimos en un tipo de dato que podemos trabajar con json.loads
-        # 2- Crea un diccionario a partir del request Body (user)
-        # 3- Casting de variables que no se pueden manejar a str
-        # 4- Y se hace un append del dict
-        # 5- Hay que moverse al principio del archivo porque ya se estuvo trabajando abierto, esto para evitar bugs, con ".seek(0)", nos lleva al primer byte
-        # 6- Hay que hacer el write pero en json, se realiza con "json.dumps()"
-        # 7- El return de user, el que viene como parámetro, para decirle al user del API que se escribio correctamente
+        for user in contents:
+            if user_dict['email'] == user['email']:
+                raise HTTPException(status_code= status.HTTP_409_CONFLICT, detail= 'Email already exist')
+        contents.append(user_dict)              #add a new user on the dictionary
+        f.seek(0)                               #move at the beginning of the file
+        f.write(json.dumps(contents))           #transform a dict and write like a json 
+        return user                             
 
 
 ### Login an user
 @app.post(
     path = '/login',
-    response_model = User,
+    response_model = UserLoginOut,
     status_code = status.HTTP_200_OK,
     summary = 'Login a user',
     tags= ['Users']
 )
-def login():
-    pass
+def login(email: EmailStr = Form(...), password: str = Form(...)):
+    """
+    Login \n
+    This path operation login an user in the app \n
+    Parameters:
+    - Request body parameters:
+        - email: EmailStr
+        - password: str 
+    Return a json with a basic user information:
+    - UserID: UUID (Universal Unique Identifier)
+    - email: EmailStr
+    - first_name: str
+    - last_name: str
+    - birth_date: datetime
+    """
+    with open("users.json", "r", encoding="utf-8") as f: 
+        contents = list(json.loads(f.read()))
+        for user in contents:
+            if email == user["email"] and password == user["password"]:
+                return UserLoginOut(email=email, message="Logged user!")
+        
+        return UserLoginOut(email=email, message= "Login not successful")
 
-### show all users
+
+### Show all users
 @app.get(
     path = '/users',
     response_model = List[User],
@@ -90,7 +100,7 @@ def show_all_users():
     This path operation shows all users in the app \n
     Parameters:
     - \n
-    Returns a json list with all users in the app, with the following keys
+    Returns a json list with all users in the app, with the following keys:
     - user_id: UUID 
     - email: EmailStr
     - first_name: str
@@ -101,7 +111,8 @@ def show_all_users():
         content = json.loads(f.read())
         return content
 
-### show an user
+
+### Show an user
 @app.get(
     path = '/users/{user_id}',
     response_model = User,
@@ -109,8 +120,30 @@ def show_all_users():
     summary = 'Show a specific user',
     tags= ['Users']
 )
-def show_an_user():
-    pass
+def show_an_user(user_id: UUID = Path(...)):
+    """
+    One User \n
+    This path operation shows one user in the app if he or she exists\n
+    Parameters:
+    - User_id: UUID
+    Returns a json with one user in the app, with the following keys:
+    - user_id: UUID 
+    - email: EmailStr
+    - first_name: str
+    - last_name: str
+    - birth_date: datetime
+    """
+    with open('users.json', 'r', encoding = 'utf-8') as f:
+        contents = json.loads(f.read())
+        id= str(user_id)
+        for user in contents:
+            if user["user_id"] == id:
+                return user
+        raise HTTPException(
+            status_code= status.HTTP_404_NOT_FOUND,
+            detail= f'The user_id does not exist'
+        )
+
 
 ### Delete an user
 @app.delete(
@@ -120,10 +153,36 @@ def show_an_user():
     summary = 'Delete an user',
     tags= ['Users']
 )
-def Delete_an_user():
-    pass
+def Delete_an_user(user_id: UUID = Path(...)):
+    """
+    Delete an User \n
+    This path operation delete one user in the app if he or she exists\n
+    Parameters:
+    - User_id: UUID
+    Returns a json with deleted user data:
+    - user_id: UUID 
+    - email: EmailStr
+    - first_name: str
+    - last_name: str
+    - birth_date: datetime
+    """
+    with open("users.json", "r+", encoding= "utf-8") as f: 
+        contents = json.loads(f.read())
+        id = str(user_id)
+        for user in contents:
+            if user["user_id"] == id:
+                contents.remove(user)
+                with open("users.json", "w", encoding="utf-8") as f:
+                    f.seek(0)
+                    f.write(json.dumps(contents))
+                    return user
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail= f'The user_id does not exist'
+        )
 
-### update an user
+
+### Update an user
 @app.put(
     path = '/user/{user_id}/update',
     response_model = User,
@@ -131,12 +190,44 @@ def Delete_an_user():
     summary = 'Update an user',
     tags= ['Users']
 )
-def update_an_user():
-    pass
+def update_an_user(user_id: UUID = Path(...), user: UserRegister= Body(...)):
+    """
+    Update an User \n
+    This path operation update one user in the app if he or she exists\n
+    Parameters:
+    - User_id: UUID
+    - Request body parameters:
+        -User: UserRegister \n
+    Returns a user model with the following data:
+    - user_id: UUID 
+    - email: EmailStr
+    - first_name: str
+    - last_name: str
+    - birth_date: datetime
+    """
+    user_id= str(user_id)
+    user_dict= user.dict()
+    user_dict["user_id"] = str(user_dict["user_id"])
+    user_dict["birth_date"] = str(user_dict["birth_date"])
+    
+    with open("users.json", "r+", encoding="utf-8") as f:
+        contents = json.loads(f.read())
+        for user in contents:
+            if user["user_id"] == user_id:
+                contents[contents.index(user)] = user_dict
+                with open("users.json", "w", encoding="utf-8") as f:
+                    f.seek(0)
+                    f.write(json.dumps(contents))
+                return user
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail= f'The user_id does not exist'
+        )
+
 
 ## Tweets
 
-###show all tweets
+###Show all tweets
 @app.get(
     path= '/',
     response_model= List[Tweet],
@@ -145,9 +236,24 @@ def update_an_user():
     tags= ['Tweets']
     )
 def home_tweets():
-    return {'Twitter API Home': 'Working Good!!'}
+    """
+    Show all Tweets \n
+    This path operation shows all tweets in the app \n
+    Parameters:
+    - \n
+    Returns a json list with all tweets in the app, with the following keys
+    - tweet_id: UUID
+    - content: str
+    - created_at: datetime
+    - updated_at: Optional[datetime]
+    - by: User 
+    """
+    with open('tweets.json', 'r', encoding = 'utf-8') as f:
+        content = json.loads(f.read())
+        return content
 
-###post a tweet
+
+###Post a tweet
 @app.post(
     path= '/post',
     response_model= Tweet,
@@ -167,14 +273,15 @@ def post(tweet: Tweet = Body(...)):
     - content: str
     - created_at: datetime
     - updated_at: Optional[datetime]
-    by: UserLogin 
+    - by: User 
     """
     with open('tweets.json','r+', encoding= 'utf-8') as f:
         contents = json.loads(f.read())
         tweet_dict = tweet.dict()
         tweet_dict['tweet_id'] = str(tweet_dict['tweet_id'])
         tweet_dict['created_at'] = str(tweet_dict['created_at'])
-        tweet_dict['updated_at'] = str(tweet_dict['updated_at'])
+        tweet_dict['updated_at']= str(tweet_dict['updated_at'])
+        #casting UUID 
         tweet_dict['by']['user_id'] = str(tweet_dict['by']['user_id'])
         tweet_dict['by']['birth_date'] = str(tweet_dict['by']['birth_date'])
         contents.append(tweet_dict)
@@ -182,7 +289,8 @@ def post(tweet: Tweet = Body(...)):
         f.write(json.dumps(contents))
         return tweet
 
-###show a tweet
+
+###Show a tweet
 @app.get(
     path= '/tweets/{tweet_id}',
     response_model= Tweet,
@@ -190,8 +298,31 @@ def post(tweet: Tweet = Body(...)):
     summary= 'Show a tweet',
     tags= ['Tweets']
 )
-def show_a_tweet():
-    pass
+def show_a_tweet(tweet_id: UUID = Path(...)):
+    """
+    Show an specific Tweet \n
+    This path operation show an specific tweet in the app \n
+    Parameters:
+    - Tweet_id: UUID
+    Returns a json list with all tweets in the app, with the following keys
+    - tweet_id: UUID
+    - content: str
+    - created_at: datetime
+    - updated_at: Optional[datetime]
+    - by: User 
+    """
+    with open('tweets.json', 'r', encoding = 'utf-8') as f:
+        contents = json.loads(f.read())
+        id= str(tweet_id)
+        for tweet in contents:
+            if tweet["tweet_id"] == id:
+                return tweet
+        
+        raise HTTPException(
+            status_code= status.HTTP_404_NOT_FOUND,
+            detail= f'The tweet_id does not exist'
+        )
+
 
 ###Delete a tweet
 @app.delete(
@@ -201,8 +332,35 @@ def show_a_tweet():
     summary= 'Delete a tweet',
     tags= ['Tweets']
 )
-def delete_a_tweet():
-    pass
+def delete_a_tweet(tweet_id: UUID = Path(...)):
+    """
+    Delete an Tweet \n
+    This path operation delete one tweet in the app\n
+    Parameters:
+    - Tweet_id: UUID
+    Returns a json with deleted tweet data:
+    - tweet_id: UUID
+    - content: str
+    - created_at: datetime
+    - updated_at: Optional[datetime]
+    - by: User 
+    """
+    with open("tweets.json", "r+", encoding= "utf-8") as f: 
+        contents = json.loads(f.read())
+        id = str(tweet_id)
+        for tweet in contents:
+            if tweet["tweet_id"] == id:
+                contents.remove(tweet)
+                with open("tweets.json", "w", encoding="utf-8") as f:
+                    f.seek(0)
+                    f.write(json.dumps(contents))
+                    return tweet
+        
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail= f'The tweet_id does not exist'
+        )
+
 
 ###Update a tweet
 @app.put(
@@ -212,44 +370,44 @@ def delete_a_tweet():
     summary= 'Update a tweet',
     tags= ['Tweets']
 )
-def update_a_tweet():
-    pass
+def update_a_tweet(
+    tweet_id: UUID = Path(...),
+    content: str = Form(...,
+    min_length= 1,
+    max_length= 256)
+    ):
+    """
+    Update a Tweet \n
+    This path operation update one tweet in the app\n
+    Parameters:
+    - Tweet_id: UUID
+    - content: str
+    Returns a json with the following data:
+    - tweet_id: UUID 
+    - content: str
+    - created_at: datetime
+    - updated_at: datetime
+    - by: user = User
+    """
+    tweet_id= str(tweet_id)
+
+    with open("tweets.json", "r+", encoding="utf-8") as f: 
+        contents = json.loads(f.read())
+        for tweet in contents:
+            if tweet["tweet_id"] == tweet_id:
+                tweet["content"] = content
+                tweet["updated_at"] = str(datetime.now())
+                with open("tweets.json", "w", encoding="utf-8") as f:
+                    f.seek(0)
+                    f.write(json.dumps(contents))
+                return tweet
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail= f'The tweet_id does not exist'
+        )
+
 
 # Run server
 if __name__ == '__main__':
     import uvicorn
-    #uvicorn.run(app, host= 'localhost', port= 8000)
     uvicorn.run('main:app', host= 'localhost', port= 8000, reload= True)
-
-
-"""
-Pequeña validación para comprobar si el email ya existe.
-if any(users['email'] == user.email for users in results):
-            raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Email already exist!"
-        )
-"""
-
-
-
-
-"""
-@validator('birth_date')  # Aqui está la magia
-    def is_over_eighteen(cls, v):
-        todays_date = datetime.date.today()
-        delta = todays_date - v
-
-        if delta.days/365 <= 18:
-            raise ValueError('Must be over 18!')
-        else:
-            return v
-
-
-
-En mi caso usé el validator decorator de Pydantic, al cual como puedes ver le paso como parametro el nombre del campo que quiero validar, lo uso para decorar una funcion de dos parametros (el primero es la clase misma NO una instancia, no la usaré pero la tengo que poner porque el validator es un classmethod y lo requiere), el segundo de ellos es el objeto a validar (pydantic al parecer tiene como convencion nombrarlo v). Implementas la logica del validador en esa funcion, la cual debe:
-
-Elevar una exeption para cuando no es un dato correcto.
-Retornar el dato mismo en caso de ser correcto.
-Para todo esto debes importar de pydantic la funcion ‘validator’
-"""

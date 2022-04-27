@@ -1,7 +1,7 @@
 # Python 
 from uuid import UUID
 from datetime import date, datetime
-from typing import Optional, List
+from typing import Optional
 
 # Pydantic
 from pydantic import BaseModel, Field, EmailStr
@@ -25,21 +25,26 @@ class UserLogin(UserBase):
 class User(UserBase):
     first_name: str = Field(
         ...,
-    min_length = 1,
-    max_length = 50,
-    example = 'john'
+        min_length = 1,
+        max_length = 50,
+        example = 'john'
     )
     last_name: str = Field(
         ...,
-    min_length = 1,
-    max_length = 50,
-    example = 'Doe'
+        min_length = 1,
+        max_length = 50,
+        example = 'Doe'
     )
     birth_date: Optional[date] = Field(default= None)
 
 
 class UserRegister(User, UserLogin):
     pass
+
+
+class UserLoginOut(BaseModel): 
+    email: EmailStr = Field(..., example = 'userexample@example.com')
+    message: str = Field(..., example = '123456789')
 
 
 class Tweet(BaseModel):

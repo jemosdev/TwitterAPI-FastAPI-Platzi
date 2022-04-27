@@ -29,15 +29,10 @@ This project is a Twitter app to publish messages.
 
 ###**Views:**
 
-####-Signup:
-![](D:\programming\platzi\codes\flask\app\static\images\signup-taskapp.jpg)
+####-Users:
+![](D:\programming\platzi\codes\fastapi_twitter\Twitter_FastAPI_(1).jpg)
 
-####-Login:
-![](D:\programming\platzi\codes\flask\app\static\images\login-taskapp.jpg)
-####-Tasks:
-![](D:\programming\platzi\codes\flask\app\static\images\making-tasks.jpg)
-
-Acknowledgements:
-Images - "Designed by slidesgo / Freepik" and "Designed by Vexels"
+####-Tweets:
+![](D:\programming\platzi\codes\fastapi_twitter\Twitter_FastAPI_(2).jpg)
 
 ###Author: jemosdev

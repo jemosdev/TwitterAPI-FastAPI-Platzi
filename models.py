@@ -1,19 +1,18 @@
 # Python 
 from uuid import UUID
 from datetime import date, datetime
-from typing import Optional, List
+from typing import Optional
 
 # Pydantic
 from pydantic import BaseModel, Field, EmailStr
 
 # Models
 
-# pendiente añadir default_factory para generar uuid
 class UserBase(BaseModel):
     user_id: UUID = Field(...)
     email: EmailStr = Field(...)
 
-#pendiente de borrar
+
 class UserLogin(UserBase):
     password: str = Field(
         ...,

@@ -5,7 +5,7 @@ from uuid import UUID
 from datetime import datetime
 from typing import List
 from fastapi import FastAPI, Body, status
-from fastapi import Form, HTTPException
+from fastapi import Form, HTTPException, Path
 from pydantic.networks import EmailStr
 
 # Models
@@ -41,13 +41,16 @@ def signup(user: UserRegister= Body(...)):
     - birth_date: datetime
     """
     with open('users.json','r+', encoding= 'utf-8') as f:
-        contents = json.loads(f.read())         #carga string transforma a json
-        user_dict = user.dict()                 #convertir body en diccionario
+        contents = json.loads(f.read())         #load the string an transform to json
+        user_dict = user.dict()                 #convert body in dictionary
         user_dict['user_id'] = str(user_dict['user_id'])
         user_dict['birth_date'] = str(user_dict['birth_date'])
-        contents.append(user_dict)
-        f.seek(0)                               #moverme al principio del archivo
-        f.write(json.dumps(contents))           #transf un dict y escribo como un json 
+        for user in contents:
+            if user_dict['email'] == user['email']:
+                raise HTTPException(status_code= status.HTTP_409_CONFLICT, detail= 'Email already exist')
+        contents.append(user_dict)              #add a new user on the dictionary
+        f.seek(0)                               #move at the beginning of the file
+        f.write(json.dumps(contents))           #transform a dict and write like a json 
         return user                             
 
 
@@ -117,7 +120,7 @@ def show_all_users():
     summary = 'Show a specific user',
     tags= ['Users']
 )
-def show_an_user(user_id: UUID = (...)):
+def show_an_user(user_id: UUID = Path(...)):
     """
     One User \n
     This path operation shows one user in the app if he or she exists\n
@@ -150,7 +153,7 @@ def show_an_user(user_id: UUID = (...)):
     summary = 'Delete an user',
     tags= ['Users']
 )
-def Delete_an_user(user_id: UUID = (...)):
+def Delete_an_user(user_id: UUID = Path(...)):
     """
     Delete an User \n
     This path operation delete one user in the app if he or she exists\n
@@ -187,7 +190,7 @@ def Delete_an_user(user_id: UUID = (...)):
     summary = 'Update an user',
     tags= ['Users']
 )
-def update_an_user(user_id: UUID = (...), user: UserRegister= Body(...)):
+def update_an_user(user_id: UUID = Path(...), user: UserRegister= Body(...)):
     """
     Update an User \n
     This path operation update one user in the app if he or she exists\n
@@ -205,9 +208,9 @@ def update_an_user(user_id: UUID = (...), user: UserRegister= Body(...)):
     user_id= str(user_id)
     user_dict= user.dict()
     user_dict["user_id"] = str(user_dict["user_id"])
-    user_dict["birth_date"] = str(user_dict["birth_date"])      #pendiente si es necesario
+    user_dict["birth_date"] = str(user_dict["birth_date"])
     
-    with open("users.json", "r+", encoding="utf-8") as f: 
+    with open("users.json", "r+", encoding="utf-8") as f:
         contents = json.loads(f.read())
         for user in contents:
             if user["user_id"] == user_id:
@@ -295,7 +298,7 @@ def post(tweet: Tweet = Body(...)):
     summary= 'Show a tweet',
     tags= ['Tweets']
 )
-def show_a_tweet(tweet_id: UUID = (...)):
+def show_a_tweet(tweet_id: UUID = Path(...)):
     """
     Show an specific Tweet \n
     This path operation show an specific tweet in the app \n
@@ -329,7 +332,7 @@ def show_a_tweet(tweet_id: UUID = (...)):
     summary= 'Delete a tweet',
     tags= ['Tweets']
 )
-def delete_a_tweet(tweet_id: UUID = (...)):
+def delete_a_tweet(tweet_id: UUID = Path(...)):
     """
     Delete an Tweet \n
     This path operation delete one tweet in the app\n
@@ -368,7 +371,7 @@ def delete_a_tweet(tweet_id: UUID = (...)):
     tags= ['Tweets']
 )
 def update_a_tweet(
-    tweet_id: UUID = (...),
+    tweet_id: UUID = Path(...),
     content: str = Form(...,
     min_length= 1,
     max_length= 256)

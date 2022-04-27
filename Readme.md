@@ -1,10 +1,10 @@
 ## TwitterAPI Clone – FastAPI | Platzi
 This project is part of the FastAPI course from platzi.
 
-###**Description:**
+**Description:**
 This project is a Twitter app to publish messages.
 
-###**Requirements:**
+**Requirements:**
 - Python
 - FastAPI
 - uvicorn
@@ -12,10 +12,10 @@ This project is a Twitter app to publish messages.
 - Email-validator
 - python-multipart
 
-###**Installation:**
+**Installation:**
 
 1. clone or download the repository:
-`$ git clone [url]`
+`$ git clone [https://github.com/jemosdev/TwitterAPI-Clone-FastAPI-Platzi]`
 2. open the console and inside de project directory, create a virtual environment:
 `py -m venv venv`
 `.\venv\Scripts\activate`
@@ -27,12 +27,12 @@ This project is a Twitter app to publish messages.
 `http://localhost:8000/docs`
 
 
-###**Views:**
+**Views:**
 
-####-Users:
-![](D:\programming\platzi\codes\fastapi_twitter\Twitter_FastAPI_(1).jpg)
+-Users:
+![](https://github.com/jemosdev/TwitterAPI-Clone-FastAPI-Platzi/blob/master/Twitter_FastAPI_(1).jpg)
 
-####-Tweets:
-![](D:\programming\platzi\codes\fastapi_twitter\Twitter_FastAPI_(2).jpg)
+-Tweets:
+![](https://github.com/jemosdev/TwitterAPI-Clone-FastAPI-Platzi/blob/master/Twitter_FastAPI_(2).jpg)
 
-###Author: jemosdev
+Author: jemosdev
